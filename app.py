@@ -3,7 +3,8 @@ import streamlit as st
 import os
 
 # Load the KB file
-df = pd.read_excel("my_kb.xlsx")
+sheet_url = "https://docs.google.com/spreadsheets/d/1ExLRaOwXtaFOSFSsNJXkI-19SWkzNUKO_rrV625Ui_0/gviz/tq?tqx=out:csv&sheet=Internal%20KB%20Data"
+df = pd.read_csv(sheet_url)
 
 st.set_page_config(page_title="Knowledge Base", layout="wide")
 
