@@ -2,22 +2,20 @@ import pandas as pd
 import streamlit as st
 import os
 
-# Load the KB file
+# --- CONFIG ---
+st.set_page_config(page_title="Internal Knowledge Base", page_icon="📚", layout="wide")
+
+# --- LOAD DATA FROM GOOGLE SHEETS ---
 sheet_url = "https://docs.google.com/spreadsheets/d/1ExLRaOwXtaFOSFSsNJXkI-19SWkzNUKO_rrV625Ui_0/gviz/tq?tqx=out:csv&sheet=Internal%20KB%20Data"
 df = pd.read_csv(sheet_url)
 
-st.set_page_config(page_title="Knowledge Base", layout="wide")
-
-# Custom CSS for background & card style
+# --- CUSTOM CSS ---
 st.markdown("""
     <style>
-    /* Change page background */
     .stApp {
         background-color: #f5f7fa;
-        color: #1f2937;
+        font-family: 'Segoe UI', sans-serif;
     }
-
-    /* Style the search results as cards */
     .result-card {
         background-color: white;
         padding: 20px;
@@ -25,18 +23,23 @@ st.markdown("""
         box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
         margin-bottom: 20px;
     }
-
-    /* Style headings */
-    h2, h3 {
-        color: #2c5282;
+    .company-logo {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 15px;
     }
     </style>
 """, unsafe_allow_html=True)
 
+# --- HEADER ---
+st.markdown("<div class='company-logo'><img src='https://upload.wikimedia.org/wikipedia/commons/4/4a/Logo_2013.png' width='200'></div>", unsafe_allow_html=True)
 st.title("🔍 Internal Knowledge Base Search")
+st.write("Search issues, view resolutions, and access supporting screenshots instantly.")
 
+# --- SEARCH BAR ---
 query = st.text_input("Enter your issue keyword:")
 
+# --- SEARCH FUNCTION ---
 if query:
     results = df[df.apply(lambda row: query.lower() in str(row).lower(), axis=1)]
 
@@ -44,25 +47,35 @@ if query:
         st.warning("No matching results found.")
     else:
         for _, row in results.iterrows():
-            with st.container():
-                st.markdown("<div class='result-card'>", unsafe_allow_html=True)
-                
-                st.subheader(f"📝 {row.get('Issue Title', 'No Title')}")
-                st.markdown(f"**Description:** {row.get('Description', 'No Description')}")
-                st.markdown(f"**Resolution:** {row.get('Resolution', 'No Resolution')}")
+            st.markdown("<div class='result-card'>", unsafe_allow_html=True)
 
-                # Show screenshot if available
-                screenshot = row.get('Screenshot_URL', '')
-                if pd.notna(screenshot) and screenshot != '':
-                    if screenshot.startswith("http"):  # If it's a URL
-                        st.image(screenshot, use_column_width=True)
-                    elif os.path.exists(screenshot):  # If it's a local file
-                        st.image(screenshot, use_column_width=True)
-                    else:
-                        st.warning(f"⚠ Screenshot not found: {screenshot}")
+            st.subheader(f"📝 {row.get('Issue Title', 'No Title')}")
 
-                tags = row.get('Tags', '')
-                if pd.notna(tags) and tags != '':
-                    st.caption(f"📌 Tags: {tags}")
+            with st.expander("📄 Description", expanded=False):
+                st.write(row.get('Description', 'No Description'))
 
-                st.markdown("</div>", unsafe_allow_html=True)
+            with st.expander("✅ Resolution", expanded=False):
+                st.write(row.get('Resolution', 'No Resolution'))
+
+            # Screenshot if available
+            screenshot = row.get('Screenshot_URL', '')
+            if pd.notna(screenshot) and screenshot != '':
+                if screenshot.startswith("http"):
+                    st.image(screenshot, use_column_width=True)
+                elif os.path.exists(screenshot):
+                    st.image(screenshot, use_column_width=True)
+
+            tags = row.get('Tags', '')
+            if pd.notna(tags) and tags != '':
+                st.caption(f"📌 Tags: {tags}")
+
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        # --- DOWNLOAD RESULTS ---
+        csv_data = results.to_csv(index=False)
+        st.download_button(
+            label="⬇ Download Results as CSV",
+            data=csv_data,
+            file_name="search_results.csv",
+            mime="text/csv"
+        )
