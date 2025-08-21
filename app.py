@@ -1,4 +1,3 @@
-
 import pandas as pd
 import streamlit as st
 
@@ -18,8 +17,20 @@ if query:
     else:
         for _, row in results.iterrows():
             st.subheader(f"📝 {row.get('Issue Title', 'No Title')}")
-            st.write(row.get('Resolution', 'No Resolution'))
-            st.caption(f"📌 Tags: {row.get('Tags', '')}")
+            
+            # Show description
+            st.markdown(f"**Description:** {row.get('Description', 'No Description')}")
+            
+            # Show resolution
+            st.markdown(f"**Resolution:** {row.get('Resolution', 'No Resolution')}")
+            
+            # Show tags if present
+            tags = row.get('Tags', '')
+            if pd.notna(tags) and tags != '':
+                st.caption(f"📌 Tags: {tags}")
+            
+            # Keep your existing 'test' field check
             if 'test' in row:
                 st.text(f"Test: {row['test']}")
+            
             st.markdown("---")
